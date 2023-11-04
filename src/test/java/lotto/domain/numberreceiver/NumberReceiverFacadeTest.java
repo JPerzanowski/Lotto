@@ -1,5 +1,6 @@
-package org.example.numberreceiver;
+package lotto.domain.numberreceiver;
 
+import lotto.domain.numberreceiver.NumberReceiverFacade;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

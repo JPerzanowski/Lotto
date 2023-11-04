@@ -1,4 +1,4 @@
-package org.example.numberreceiver;
+package lotto.domain.numberreceiver;
 
 import java.util.List;
 

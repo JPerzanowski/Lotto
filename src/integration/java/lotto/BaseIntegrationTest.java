@@ -1,7 +1,6 @@
 package lotto;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import lotto.domain.LottoSpringBootApplication;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

@@ -1,12 +1,13 @@
 package lotto.domain.resultannoucer;
 
 import lotto.domain.resultchecker.ResultCheckerFacade;
+import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
-
+@Configuration
 public class ResultAnnouncerConfiguration {
 
-    ResultAnnouncerFacade createForTest(ResultCheckerFacade resultCheckerFacade, ResponseRepository responseRepository, Clock clock) {
+    ResultAnnouncerFacade resultAnnouncerFacade(ResultCheckerFacade resultCheckerFacade, ResponseRepository responseRepository, Clock clock) {
         return new ResultAnnouncerFacade(resultCheckerFacade, responseRepository, clock);
     }
 }

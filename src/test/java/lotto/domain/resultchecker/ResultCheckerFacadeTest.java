@@ -48,7 +48,7 @@ class ResultCheckerFacadeTest {
         );
         ResultCheckerFacade resultCheckerFacade = new ResultCheckerConfiguration().resultCheckerFacade(winningNumbersGeneratorFacade, numberReceiverFacade, playerRepository);
         //when
-        PlayersDto playersDto = resultCheckerFacade.generateWinners();
+        PlayersDto playersDto = resultCheckerFacade.generateResults();
         //then
         List<ResultDto> results = playersDto.results();
         ResultDto resultDto = ResultDto.builder()
@@ -86,7 +86,7 @@ class ResultCheckerFacadeTest {
                 .build());
         ResultCheckerFacade resultCheckerFacade = new ResultCheckerConfiguration().resultCheckerFacade(winningNumbersGeneratorFacade, numberReceiverFacade, playerRepository);
         //when
-        PlayersDto playersDto = resultCheckerFacade.generateWinners();
+        PlayersDto playersDto = resultCheckerFacade.generateResults();
         //then
         String message = playersDto.message();
         assertThat(message).isEqualTo("Winners failed to retrieve");
@@ -101,7 +101,7 @@ class ResultCheckerFacadeTest {
                 .build());
         ResultCheckerFacade resultCheckerFacade = new ResultCheckerConfiguration().resultCheckerFacade(winningNumbersGeneratorFacade, numberReceiverFacade, playerRepository);
         //when
-        PlayersDto playersDto = resultCheckerFacade.generateWinners();
+        PlayersDto playersDto = resultCheckerFacade.generateResults();
         //then
         String message = playersDto.message();
         assertThat(message).isEqualTo("Winners failed to retrieve");
@@ -134,10 +134,10 @@ class ResultCheckerFacadeTest {
                                 .build())
         );
         ResultCheckerFacade resultCheckerFacade = new ResultCheckerConfiguration().resultCheckerFacade(winningNumbersGeneratorFacade, numberReceiverFacade, playerRepository);
-        resultCheckerFacade.generateWinners();
+        resultCheckerFacade.generateResults();
         //when
 
-        ResultDto resultDto = resultCheckerFacade.findByHash(hash);
+        ResultDto resultDto = resultCheckerFacade.findByTicketId(hash);
         //then
         ResultDto expectedResult = ResultDto.builder()
                 .hash(hash)

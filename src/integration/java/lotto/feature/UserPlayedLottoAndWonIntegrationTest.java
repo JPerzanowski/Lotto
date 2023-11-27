@@ -4,11 +4,14 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import lotto.domain.loginandregister.dto.RegistrationResultDto;
 import lotto.domain.resultannoucer.dto.ResultAnnouncerResponseDto;
 import lotto.domain.resultchecker.PlayerResultNotFoundException;
 import lotto.domain.resultchecker.ResultCheckerFacade;
 import lotto.domain.resultchecker.dto.ResultDto;
+import lotto.infrastructure.loginandregister.controller.dto.JwtResponseDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,6 +51,7 @@ public class UserPlayedLottoAndWonIntegrationTest extends BaseIntegrationTest {
                                 [1, 2, 3, 4, 5, 6, 82, 82, 83, 83, 86, 57, 10, 81, 53, 93, 50, 54, 31, 88, 15, 43, 79, 32, 43]
                                           """.trim()
                         )));
+
         //step 2: system fetched winning numbers for draw date: 19.11.2022 12:00
         // given
         LocalDateTime drawDate = LocalDateTime.of(2022, 11, 19, 12, 0, 0);
@@ -64,11 +68,74 @@ public class UserPlayedLottoAndWonIntegrationTest extends BaseIntegrationTest {
                         }
                 );
 
+        //step 3: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned UNAUTHORIZED(401)
+        // given & when
+        ResultActions failedLoginRequest = mockMvc.perform(post("/token")
+                .content("""
+                        {
+                        "username": "someUser",
+                        "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+        // then
+        failedLoginRequest
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().json("""
+                        {
+                          "message": "Bad Credentials",
+                          "status": "UNAUTHORIZED"
+                        }
+                        """.trim()));
 
-        //step 3: user made POST /inputNumbers with 6 numbers (1, 2, 3, 4, 5, 6) at 16-11-2022 10:00 and system returned OK(200) with message: “success” and Ticket (DrawDate:19.11.2022 12:00 (Saturday), TicketId: sampleTicketId)
+        //step 4: user made POST /register with username=someUser, password=somePassword and system registered user with status CREATED(201)
+        // given & when
+        ResultActions registerAction = mockMvc.perform(post("/register")
+                .content("""
+                        {
+                        "username": "someUser",
+                        "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+        // then
+        MvcResult registerActionResult = registerAction.andExpect(status().isCreated()).andReturn();
+        String registerActionResultJson = registerActionResult.getResponse().getContentAsString();
+        RegistrationResultDto registrationResultDto = objectMapper.readValue(registerActionResultJson, RegistrationResultDto.class);
+        assertAll(
+                () -> assertThat(registrationResultDto.username()).isEqualTo("someUser"),
+                () -> assertThat(registrationResultDto.created()).isTrue(),
+                () -> assertThat(registrationResultDto.id()).isNotNull()
+        );
+
+        //step 5: user tried to get JWT token by requesting POST /token with username=someUser, password=somePassword and system returned OK(200) and jwttoken=AAAA.BBBB.CCC
+        // given & when
+        ResultActions successLoginRequest = mockMvc.perform(post("/token")
+                .content("""
+                        {
+                        "username": "someUser",
+                        "password": "somePassword"
+                        }
+                        """.trim())
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+        // then
+        MvcResult mvcResultJwt = successLoginRequest.andExpect(status().isOk()).andReturn();
+        String jsonJwt = mvcResultJwt.getResponse().getContentAsString();
+        JwtResponseDto jwtResponse = objectMapper.readValue(jsonJwt, JwtResponseDto.class);
+        String token = jwtResponse.token();
+        assertAll(
+                () -> assertThat(jwtResponse.username()).isEqualTo("someUser"),
+                () -> assertThat(token).matches(Pattern.compile("^([A-Za-z0-9-_=]+\\.)+([A-Za-z0-9-_=])+\\.?$"))
+        );
+
+        //step 6: user made POST /inputNumbers with header “Authorization: Bearer AAAA.BBBB.CCC” and with 6 numbers (1, 2, 3, 4, 5, 6) at 16-11-2022 10:00 and system returned OK(200) with message: “success” and Ticket (DrawDate:19.11.2022 12:00 (Saturday), TicketId: sampleTicketId)
         // given
         // when
         ResultActions performPostInputNumbers = mockMvc.perform(post("/inputNumbers")
+                        .header("Authorization", "Bearer " + token)
                 .content("""
                         {
                         "inputNumbers": [1,2,3,4,5,6]
@@ -86,6 +153,15 @@ public class UserPlayedLottoAndWonIntegrationTest extends BaseIntegrationTest {
                 () -> assertThat(ticketId).isNotNull(),
                 () -> assertThat(numberReceiverResponseDto.message()).isEqualTo("SUCCESS")
         );
+
+        //step 7: user made GET /results with no jwt token and system returned UNAUTHORIZED(401)
+        // given & when
+        ResultActions failedGetResultsRequest = mockMvc.perform(get("/results/" + ticketId)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+        );
+        // then
+        failedGetResultsRequest.andExpect(status().isForbidden());
+
 
 
         //step 4: user made GET /results/notExistingId and system returned 404(NOT_FOUND) and body with (message: Not found for id: notExistingId and status NOT_FOUND)

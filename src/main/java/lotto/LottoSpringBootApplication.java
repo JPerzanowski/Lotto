@@ -1,6 +1,7 @@
 package lotto;
 
 import lotto.domain.numbergenerator.WinningNumbersGeneratorFacadeConfigurationProperties;
+import lotto.infrastructure.security.jwt.JwtConfigurationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -9,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableConfigurationProperties({WinningNumbersGeneratorFacadeConfigurationProperties.class})
+@EnableConfigurationProperties(value = {WinningNumbersGeneratorFacadeConfigurationProperties.class, JwtConfigurationProperties.class})
 @EnableMongoRepositories
 public class LottoSpringBootApplication {
 

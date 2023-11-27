@@ -26,3 +26,9 @@ lotto:
           port: 80
           connectionTimeout: 5000
           readTimeout: 5000
+
+auth:
+  jwt:
+    expirationDays: 30
+    secret: ${JWT_SECRET}
+    issuer: job-offers-backend
